@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endoscopic Image Classification</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css">
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center">
+  <h1 class="text-4xl font-bold mb-8 text-gray-700">
+    Endoscopic Image Classification
+  </h1>
+
+  <div 
+    class="border-dashed border-2 border-gray-300 p-10 rounded-lg bg-white shadow-md hover:bg-gray-50"
+    ondragover="event.preventDefault()" 
+    ondrop="handleDrop(event)"
+  >
+    <label class="block mb-2 text-gray-500">Drag & Drop or Choose an Image</label>
+    <input
+      type="file"
+      accept="image/*"
+      onchange="handleImageChange(event)"
+      class="hidden"
+      id="file-upload"
+    />
+    <label for="file-upload" class="cursor-pointer px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
+      Choose Image
+    </label>
+  </div>
+
+  <div id="selectedImageContainer" class="mt-4 hidden">
+    <img id="selectedImagePreview" alt="Selected" class="max-w-sm rounded shadow-lg mb-4" />
+    <button 
+      onclick="handleSubmit()" 
+      class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+    >
+      Classify
+    </button>
+  </div>
+
+  <div id="responseMessage" class="mt-4 text-gray-700"></div>
+
+  <script>
+    let selectedImage = null;
+
+    function handleImageChange(e) {
+      const file = e.target.files[0];
+      if (file) {
+        selectedImage = file;
+        document.getElementById('responseMessage').textContent = '';
+        displayImagePreview(file);
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        selectedImage = file;
+        document.getElementById('responseMessage').textContent = '';
+        displayImagePreview(file);
+      }
+    }
+
+    function displayImagePreview(file) {
+      const preview = document.getElementById('selectedImagePreview');
+      preview.src = URL.createObjectURL(file);
+      document.getElementById('selectedImageContainer').classList.remove('hidden');
+    }
+
+    async function handleSubmit() {
+      if (!selectedImage) {
+        document.getElementById('responseMessage').textContent = "No image selected.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+
+      try {
+        const response = await fetch('/classify', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        console.log(data)
+        
+        //make chagnes here to display things
+        document.getElementById('responseMessage').textContent = 
+          data.message ? data.message : "It is empty"
+      } catch (error) {
+        console.error(error);
+        document.getElementById('responseMessage').textContent = "Error uploading image.";
+      }
+    }
+  </script>
+</body>
+</html>
